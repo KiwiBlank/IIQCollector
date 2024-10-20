@@ -1,0 +1,34 @@
+﻿using JsonTypes.Dedupe;
+using System.Text.Json;
+
+namespace Endpoints
+{
+    internal class GetDedupeStats
+    {
+        public static async Task<List<JsonTypes.Dedupe.Format>> GetAllClusterDedupe()
+        {
+            HttpClient client = IIQCompare.Program.HTTPPrepare();
+            List<JsonTypes.Dedupe.Format> clusterReports = new List<JsonTypes.Dedupe.Format>();
+
+            foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
+            {
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/drr/{1}/overview", IIQCompare.Program.IIQHostAdress, cluster.Guid);
+                string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
+                Format parsedRoot = ParseJsonDedupe(result, cluster.Guid, cluster.Name);
+                clusterReports.Add(parsedRoot);
+            }
+
+            return clusterReports;
+        }
+
+        public static JsonTypes.Dedupe.Format ParseJsonDedupe(string json, string clusterGUID, string clusterName)
+        {
+            JsonTypes.Dedupe.Format root = JsonSerializer.Deserialize<JsonTypes.Dedupe.Format>(json, SourceGeneratorContextd.Default.Format);
+
+            root.ClusterGUID = clusterGUID;
+            root.ClusterName = clusterName;
+
+            return root;
+        }
+    }
+}
