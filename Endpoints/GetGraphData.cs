@@ -1,4 +1,5 @@
-﻿using JsonTypes.GraphFormat;
+﻿using IIQCompare;
+using JsonTypes.GraphFormat;
 using System.Text.Json;
 
 namespace Endpoints
@@ -57,8 +58,12 @@ namespace Endpoints
             }
             catch (Exception e)
             {
-                Console.WriteLine("Error parsing json");
-                Console.WriteLine(e);
+                if (Program.Debug)
+                {
+                    Console.WriteLine("Error sending HTTP request");
+                    Console.WriteLine(e.Message);
+                }
+
                 IIQCompare.Program.LogExceptionToFile(e);
             }
 

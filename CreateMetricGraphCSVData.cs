@@ -22,7 +22,7 @@ namespace IIQCompare
                     var closestDataPoint = FindClosest(cluster.OrderBy(o => o.Time).ToList(), Program.lastDateUsed / 1000);
                     if (closestDataPoint == null)
                     {
-
+                        Console.WriteLine("CSV error");
                     }
                     if (forLNN)
                     {

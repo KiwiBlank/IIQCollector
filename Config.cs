@@ -27,6 +27,8 @@ namespace IIQCompare
             Program.GetCSV = appSettings.GetCSV;
             Program.GatherOffsetUnixMilliseconds = appSettings.GatherOffsetUnixMilliseconds;
             Program.GatherOffsetUnixSeconds = appSettings.GatherOffsetUnixSeconds;
+            Program.Debug = appSettings.Debug;
+
             //Program.PollingRate = 50;
         }
     }
@@ -43,6 +45,8 @@ namespace IIQCompare
         public bool GetCSV { get; set; } = true;
         public int GatherOffsetUnixSeconds { get; set; } = 600;
         public int GatherOffsetUnixMilliseconds { get; set; } = 600000;
+        public bool Debug { get; set; } = false;
+
     }
 
     [JsonSerializable(typeof(ConfigOptions))]

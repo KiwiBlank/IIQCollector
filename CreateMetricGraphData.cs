@@ -35,6 +35,7 @@ namespace IIQCompare
                 else
                 {
                     Console.WriteLine(errorDataEmpty, cluster.ChartLabel, cluster.ClusterName);
+                    gauge.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Unpublish();
                 }
             }
         }

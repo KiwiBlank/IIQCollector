@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using IIQCompare;
+using System.Globalization;
 
 namespace Endpoints
 {
@@ -7,6 +8,7 @@ namespace Endpoints
     {
         public static async Task<List<List<JsonTypes.GraphCSVFormat.NodeData>>> Get(string dataKey, bool forLNN)
         {
+
             HttpClient client = IIQCompare.Program.HTTPPrepare();
             List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterReports = new List<List<JsonTypes.GraphCSVFormat.NodeData>>();
 
@@ -14,9 +16,21 @@ namespace Endpoints
             {
                 string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/download_data?no_min_max=true&key={1}&cluster={2}", IIQCompare.Program.IIQHostAdress, dataKey, cluster.Guid);
                 string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
+                try
+                {
+                    List<JsonTypes.GraphCSVFormat.NodeData> parsedRoot = ParseCSV(result, cluster.Guid, cluster.Name, forLNN);
+                    clusterReports.Add(parsedRoot);
+                }
+                catch (Exception e)
+                {
+                    if (Program.Debug)
+                    {
+                        Console.WriteLine("Error sending HTTP request");
+                        Console.WriteLine(e.Message);
+                    }
 
-                List<JsonTypes.GraphCSVFormat.NodeData> parsedRoot = ParseCSV(result, cluster.Guid, cluster.Name, forLNN);
-                clusterReports.Add(parsedRoot);
+                    IIQCompare.Program.LogExceptionToFile(e);
+                }
             }
 
             return clusterReports;
@@ -31,7 +45,7 @@ namespace Endpoints
             // Check if the CSV contains error "ERROR: There is no data available at this time."
             if (headers.Any(h => h.Contains("ERROR: There is no data available at this time")))
             {
-                Console.WriteLine("Error: CSV data contains an error message. No data available");
+                Console.WriteLine("Error: CSV data contains an error message. No data available for cluster {0}", clusterName);
                 return null;
             }
 

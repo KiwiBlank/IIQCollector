@@ -40,7 +40,6 @@ namespace IIQCompare
         {
             using var server = new KestrelMetricServer(port: Program.ExporterWebPort);
             server.Start();
-
             var clusterUsedBytesMetric = Metrics.CreateGauge("cluster_usage_bytes", "Cluster used bytes",
                 new GaugeConfiguration
                 {
@@ -100,19 +99,14 @@ namespace IIQCompare
                     await GetSession();
                     try
                     {
-                        List<JsonTypes.Dedupe.Format> clusterDedupe = Endpoints.GetDedupeStats.GetAllClusterDedupe().Result;
+                        List<JsonTypes.Dedupe.Format> clusterDedupe = await Endpoints.GetDedupeStats.GetAllClusterDedupe();
 
-                        List<JsonTypes.GraphFormat.Root> clusterCapacityUsed = Endpoints.GetGraphData.Get("cluster_used").Result;
-                        List<JsonTypes.GraphFormat.Root> clusterThroughput = Endpoints.GetGraphData.Get("ifs_total_rate").Result;
-                        List<JsonTypes.GraphFormat.Root> clusterCPU = Endpoints.GetGraphData.Get("cpu").Result;
-                        List<JsonTypes.GraphFormat.Root> clusterNetThroughput = Endpoints.GetGraphData.Get("ext_net").Result;
-                        List<JsonTypes.GraphFormat.Root> clusterCapacityTotal = Endpoints.GetGraphData.Get("cluster_total").Result;
-                        List<JsonTypes.GraphFormat.Root> clusterWriteableTotal = Endpoints.GetGraphData.Get("cluster_writeable").Result;
-
-                        List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterCPULNN = Endpoints.GetCSVData.Get("cpu%7Clnn%7C10", true).Result;
-                        List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterNetThroughputLNN = Endpoints.GetCSVData.Get("ext_net%7Clnn%7C10", true).Result;
-                        List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterSIQNetThroughput = Endpoints.GetCSVData.Get("ext_net&filter=proto_name:siq", false).Result;
-
+                        List<JsonTypes.GraphFormat.Root> clusterCapacityUsed = await Endpoints.GetGraphData.Get("cluster_used");
+                        List<JsonTypes.GraphFormat.Root> clusterThroughput = await Endpoints.GetGraphData.Get("ifs_total_rate");
+                        List<JsonTypes.GraphFormat.Root> clusterCPU = await Endpoints.GetGraphData.Get("cpu");
+                        List<JsonTypes.GraphFormat.Root> clusterNetThroughput = await Endpoints.GetGraphData.Get("ext_net");
+                        List<JsonTypes.GraphFormat.Root> clusterCapacityTotal = await Endpoints.GetGraphData.Get("cluster_total");
+                        List<JsonTypes.GraphFormat.Root> clusterWriteableTotal = await Endpoints.GetGraphData.Get("cluster_writeable");
                         CreateMetricGraphData.Create(clusterCapacityUsed, clusterUsedBytesMetric);
                         CreateMetricGraphData.Create(clusterThroughput, clusterTroughputMetric);
                         CreateMetricGraphData.Create(clusterCPU, clusterCPUMetric);
@@ -120,9 +114,15 @@ namespace IIQCompare
                         CreateMetricGraphData.Create(clusterCapacityTotal, clusterTotalBytesMetric);
                         CreateMetricGraphData.Create(clusterWriteableTotal, clusterWriteableTotalMetric);
 
-                        CreateMetricGraphCSVData.Create(clusterCPULNN, clusterCPULNNMetric, true);
-                        CreateMetricGraphCSVData.Create(clusterNetThroughputLNN, clusterNetThroughputLNNMetric, true);
-                        CreateMetricGraphCSVData.Create(clusterSIQNetThroughput, clusterSIQNetThroughputMetric, false);
+                        if (Program.GetCSV)
+                        {
+                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterCPULNN = await Endpoints.GetCSVData.Get("cpu%7Clnn%7C10", true);
+                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterNetThroughputLNN = await Endpoints.GetCSVData.Get("ext_net%7Clnn%7C10", true);
+                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterSIQNetThroughput = await Endpoints.GetCSVData.Get("ext_net&filter=proto_name:siq", false);
+                            CreateMetricGraphCSVData.Create(clusterCPULNN, clusterCPULNNMetric, true);
+                            CreateMetricGraphCSVData.Create(clusterNetThroughputLNN, clusterNetThroughputLNNMetric, true);
+                            CreateMetricGraphCSVData.Create(clusterSIQNetThroughput, clusterSIQNetThroughputMetric, false);
+                        }
 
                         foreach (var cluster in clusterDedupe)
                         {
@@ -140,7 +140,7 @@ namespace IIQCompare
                         throw;
                     }
 
-                    await Task.Delay(TimeSpan.FromSeconds(30));
+                    await Task.Delay(TimeSpan.FromSeconds(Program.PollingRate));
                 }
             });
 

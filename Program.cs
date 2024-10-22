@@ -21,6 +21,7 @@ namespace IIQCompare
         public static bool GetCSV;
         public static int GatherOffsetUnixMilliseconds;
         public static int GatherOffsetUnixSeconds;
+        public static bool Debug;
         public static HttpClient HTTPPrepare()
         {
             HttpClient httpClient = new HttpClient(HandlerClient);
@@ -33,13 +34,27 @@ namespace IIQCompare
 
         public static async Task<string> HTTPSend(HttpClient client, string httpEndpoint, bool checkStatusCode)
         {
-            using HttpResponseMessage response = await client.GetAsync(httpEndpoint);
-            if (checkStatusCode)
+            try
             {
-                response.EnsureSuccessStatusCode();
-            };
-            string readJson = await response.Content.ReadAsStringAsync();
-            return readJson;
+                using HttpResponseMessage response = await client.GetAsync(httpEndpoint);
+                if (checkStatusCode)
+                {
+                    response.EnsureSuccessStatusCode();
+                };
+                string readJson = await response.Content.ReadAsStringAsync();
+                return readJson;
+            }
+            catch (Exception e)
+            {
+                if (Program.Debug)
+                {
+                    Console.WriteLine("Error sending HTTP request");
+                    Console.WriteLine(e.Message);
+                }
+
+                LogExceptionToFile(e);
+            }
+            return "";
         }
 
         public static void LogExceptionToFile(Exception ex)
