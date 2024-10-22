@@ -5,11 +5,30 @@ namespace IIQCompare
     public class CreateMetricGraphData
     {
         private string errorDataEmpty = "Error: Chartdata response is empty for {0}, cluster {1}";
+        private static Dictionary<string, Gauge> _metrics = new Dictionary<string, Gauge>();
 
-        public static void Create(List<JsonTypes.GraphFormat.Root> output, Gauge gauge)
+        // Method to dynamically create a metric if it doesn't already exist
+        private static Gauge CreateOrGetGauge(string metricName, string helpText, string[] labelNames)
         {
-            string errorDataEmpty = "Error: Chartdata response is empty for {0}, cluster {1}";
+            if (!_metrics.TryGetValue(metricName, out var metric))
+            {
+                // If the metric doesn't exist, create it
+                metric = Metrics.CreateGauge(metricName, helpText, new GaugeConfiguration
+                {
+                    LabelNames = labelNames
+                });
 
+                // Add it to the dictionary
+                _metrics.Add(metricName, metric);
+            }
+            return metric;
+        }
+
+        public static async void Create(string metricName, string helpText, string[] labelNames)
+        {
+            var output = await Endpoints.GetGraphData.Get(metricName);
+            string errorDataEmpty = "Error: Chartdata response is empty for {0}, cluster {1}";
+            var gauge = CreateOrGetGauge(metricName, helpText, labelNames);
             // Update the metric values dynamically for each server
             foreach (var cluster in output)
             {

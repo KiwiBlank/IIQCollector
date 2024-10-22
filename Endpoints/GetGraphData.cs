@@ -8,6 +8,7 @@ namespace Endpoints
     {
         public static async Task<List<JsonTypes.GraphFormat.Root>> Get(string dataKey)
         {
+
             HttpClient client = IIQCompare.Program.HTTPPrepare();
             List<JsonTypes.GraphFormat.Root> clusterReports = new List<JsonTypes.GraphFormat.Root>();
 

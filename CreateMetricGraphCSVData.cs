@@ -4,9 +4,28 @@ namespace IIQCompare
 {
     public class CreateMetricGraphCSVData
     {
+        private static Dictionary<string, Gauge> _metrics = new Dictionary<string, Gauge>();
 
-        public static void Create(List<List<JsonTypes.GraphCSVFormat.NodeData>> output, Gauge gauge, bool forLNN)
+        // Method to dynamically create a metric if it doesn't already exist
+        private static Gauge CreateOrGetGauge(string metricName, string helpText, string[] labelNames)
         {
+            if (!_metrics.TryGetValue(helpText, out var metric))
+            {
+                // If the metric doesn't exist, create it
+                metric = Metrics.CreateGauge(metricName, helpText, new GaugeConfiguration
+                {
+                    LabelNames = labelNames
+                });
+
+                // Add it to the dictionary
+                _metrics.Add(metricName, metric);
+            }
+            return metric;
+        }
+        public static async void Create(string metricName, string helpText, string[] labelNames, bool forLNN, string filters)
+        { // &filter=proto_name:smb2
+            var output = await Endpoints.GetCSVData.Get(metricName, filters, forLNN);
+            var gauge = CreateOrGetGauge(metricName, helpText, labelNames);
 
             // Update the metric values dynamically for each server
             foreach (var cluster in output)

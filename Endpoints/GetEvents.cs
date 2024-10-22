@@ -1,34 +1,40 @@
 ﻿using IIQCompare;
 using JsonTypes.Dedupe;
+using JsonTypes.EventFormat;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace Endpoints
 {
-    class GetDedupeStats
+    class GetEvents
     {
-        public static async Task<List<JsonTypes.Dedupe.Format>> Get()
+        public static async Task<List<JsonTypes.EventFormat.ActiveEvents>> Get()
         {
             HttpClient client = IIQCompare.Program.HTTPPrepare();
-            List<JsonTypes.Dedupe.Format> clusterReports = new List<JsonTypes.Dedupe.Format>();
+            List<JsonTypes.EventFormat.ActiveEvents> clusterReports = new List<JsonTypes.EventFormat.ActiveEvents>();
 
             foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/drr/{1}/overview", IIQCompare.Program.IIQHostAdress, cluster.Guid);
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/summary/active_events?cluster={1}", IIQCompare.Program.IIQHostAdress, cluster.Guid);
                 string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
-                Format parsedRoot = ParseJson(result, cluster.Guid, cluster.Name);
+                JsonTypes.EventFormat.ActiveEvents parsedRoot = ParseJson(result, cluster.Guid, cluster.Name);
                 clusterReports.Add(parsedRoot);
             }
 
             return clusterReports;
         }
 
-        public static JsonTypes.Dedupe.Format ParseJson(string json, string clusterGUID, string clusterName)
+        public static JsonTypes.EventFormat.ActiveEvents ParseJson(string json, string clusterGUID, string clusterName)
         {
-            JsonTypes.Dedupe.Format root = null;
+            JsonTypes.EventFormat.ActiveEvents root = null;
 
             try
             {
-                root = JsonSerializer.Deserialize<JsonTypes.Dedupe.Format>(json, SourceGeneratorContextd.Default.Format);
+                root = JsonSerializer.Deserialize<JsonTypes.EventFormat.ActiveEvents>(json, SourceGeneratorContextt.Default.ActiveEvents);
 
                 root.ClusterGUID = clusterGUID;
                 root.ClusterName = clusterName;

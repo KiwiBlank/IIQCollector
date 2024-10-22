@@ -6,7 +6,7 @@ namespace Endpoints
 
     public class GetCSVData
     {
-        public static async Task<List<List<JsonTypes.GraphCSVFormat.NodeData>>> Get(string dataKey, bool forLNN)
+        public static async Task<List<List<JsonTypes.GraphCSVFormat.NodeData>>> Get(string dataKey, string filters, bool forLNN)
         {
 
             HttpClient client = IIQCompare.Program.HTTPPrepare();
@@ -14,7 +14,7 @@ namespace Endpoints
 
             foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/download_data?no_min_max=true&key={1}&cluster={2}", IIQCompare.Program.IIQHostAdress, dataKey, cluster.Guid);
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/download_data?no_min_max=true&key={1}{2}&cluster={3}", IIQCompare.Program.IIQHostAdress, dataKey, filters, cluster.Guid);
                 string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
                 try
                 {

@@ -40,8 +40,12 @@ namespace IIQCompare
             List<String> headersList = response.Headers.GetValues("Set-Cookie").ToList();
             Program.AuthKey = ParseAuthKey(headersList[0]);
             Program.AuthCSRF = ParseCSRFKey(headersList[1]);
-            //Console.WriteLine("Authkey: {0}", Program.AuthKey);
-            //Console.WriteLine("CSRFKey: {0}", Program.AuthCSRF);
+            if (Program.Debug)
+            {
+                Console.WriteLine("Authkey: {0}", Program.AuthKey);
+                Console.WriteLine("CSRFKey: {0}", Program.AuthCSRF);
+            }
+
         }
 
         public static string ParseAuthKey(string authKey)

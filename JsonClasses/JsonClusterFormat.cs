@@ -72,6 +72,9 @@ namespace JsonTypes.Cluster
     {
         [JsonPropertyName("results")]
         public List<Result> Results { get; set; }
+        public string ClusterGUID { get; set; }
+
+        public string ClusterName { get; set; }
     }
 
     [JsonUnmappedMemberHandling(JsonUnmappedMemberHandling.Disallow)]

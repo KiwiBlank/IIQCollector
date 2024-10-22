@@ -23,9 +23,13 @@ namespace IIQCompare
         public static int GatherOffsetUnixSeconds;
         public static bool Debug;
         public static int NumBreakouts;
+        public static int HTTPTimeoutMinutes;
+        public static int RestartAfterCount;
         public static HttpClient HTTPPrepare()
         {
             HttpClient httpClient = new HttpClient(HandlerClient);
+            httpClient.Timeout = TimeSpan.FromMinutes(Program.HTTPTimeoutMinutes);
+
             var baseAddress = new Uri(IIQHostAdress);
             var cookieContainer = new CookieContainer();
             cookieContainer.Add(baseAddress, new Cookie("TOK", "insightiq_auth={0}", AuthKey));
@@ -143,7 +147,7 @@ namespace IIQCompare
             // Subtract 5 minutes (5 minutes = 5 * 60 * 1000 milliseconds)
             //unixMinusFive = currentUnixTimeMillis - (2 * 60 * 1000);
             unixMinusFive = currentUnixTimeMillis;
-            Program.lastDateUsed = currentUnixTimeMillis - 600000;
+            Program.lastDateUsed = currentUnixTimeMillis - Program.GatherOffsetUnixMilliseconds;
             MetricsConfiguration.PrometheusClient();
         }
     }

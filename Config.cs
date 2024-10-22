@@ -29,7 +29,8 @@ namespace IIQCompare
             Program.GatherOffsetUnixSeconds = appSettings.GatherOffsetUnixSeconds;
             Program.Debug = appSettings.Debug;
             Program.NumBreakouts = appSettings.NumberOfBreakouts;
-
+            Program.HTTPTimeoutMinutes = appSettings.HTTPTimeoutMinutes;
+            Program.RestartAfterCount = appSettings.RestartAfterCount;
             //Program.PollingRate = 50;
         }
     }
@@ -48,7 +49,8 @@ namespace IIQCompare
         public int GatherOffsetUnixMilliseconds { get; set; } = 600000;
         public bool Debug { get; set; } = false;
         public int NumberOfBreakouts { get; set; } = 10;
-
+        public int HTTPTimeoutMinutes { get; set; } = 2;
+        public int RestartAfterCount { get; set; } = 500;
     }
 
     [JsonSerializable(typeof(ConfigOptions))]
