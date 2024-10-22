@@ -136,8 +136,13 @@ namespace IIQCompare
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
-                        throw;
+                        if (Program.Debug)
+                        {
+                            Console.WriteLine(e.Message);
+                        }
+                        Console.WriteLine("Error processing metrics");
+
+                        IIQCompare.Program.LogExceptionToFile(e);
                     }
 
                     await Task.Delay(TimeSpan.FromSeconds(Program.PollingRate));

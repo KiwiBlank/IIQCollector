@@ -1,4 +1,5 @@
-﻿using JsonTypes.Dedupe;
+﻿using IIQCompare;
+using JsonTypes.Dedupe;
 using System.Text.Json;
 
 namespace Endpoints
@@ -23,10 +24,25 @@ namespace Endpoints
 
         public static JsonTypes.Dedupe.Format ParseJsonDedupe(string json, string clusterGUID, string clusterName)
         {
-            JsonTypes.Dedupe.Format root = JsonSerializer.Deserialize<JsonTypes.Dedupe.Format>(json, SourceGeneratorContextd.Default.Format);
+            JsonTypes.Dedupe.Format root = null;
 
-            root.ClusterGUID = clusterGUID;
-            root.ClusterName = clusterName;
+            try
+            {
+                root = JsonSerializer.Deserialize<JsonTypes.Dedupe.Format>(json, SourceGeneratorContextd.Default.Format);
+
+                root.ClusterGUID = clusterGUID;
+                root.ClusterName = clusterName;
+            }
+            catch (Exception e)
+            {
+                if (Program.Debug)
+                {
+                    Console.WriteLine("Error sending HTTP request");
+                    Console.WriteLine(e.Message);
+                }
+
+                IIQCompare.Program.LogExceptionToFile(e);
+            }
 
             return root;
         }
