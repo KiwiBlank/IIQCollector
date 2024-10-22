@@ -22,6 +22,7 @@ namespace IIQCompare
         public static int GatherOffsetUnixMilliseconds;
         public static int GatherOffsetUnixSeconds;
         public static bool Debug;
+        public static int NumBreakouts;
         public static HttpClient HTTPPrepare()
         {
             HttpClient httpClient = new HttpClient(HandlerClient);

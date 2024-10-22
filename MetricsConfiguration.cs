@@ -116,8 +116,9 @@ namespace IIQCompare
 
                         if (Program.GetCSV)
                         {
-                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterCPULNN = await Endpoints.GetCSVData.Get("cpu%7Clnn%7C10", true);
-                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterNetThroughputLNN = await Endpoints.GetCSVData.Get("ext_net%7Clnn%7C10", true);
+                            
+                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterCPULNN = await Endpoints.GetCSVData.Get(String.Format("cpu%7Clnn%7C{0}",Program.NumBreakouts), true);
+                            List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterNetThroughputLNN = await Endpoints.GetCSVData.Get(String.Format("ext_net%7Clnn%7C{0}", Program.NumBreakouts), true);
                             List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterSIQNetThroughput = await Endpoints.GetCSVData.Get("ext_net&filter=proto_name:siq", false);
                             CreateMetricGraphCSVData.Create(clusterCPULNN, clusterCPULNNMetric, true);
                             CreateMetricGraphCSVData.Create(clusterNetThroughputLNN, clusterNetThroughputLNNMetric, true);
