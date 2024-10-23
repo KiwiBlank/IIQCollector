@@ -31,6 +31,7 @@ namespace IIQCompare
             Program.NumBreakouts = appSettings.NumberOfBreakouts;
             Program.HTTPTimeoutMinutes = appSettings.HTTPTimeoutMinutes;
             Program.RestartAfterCount = appSettings.RestartAfterCount;
+            Program.GetEvents = appSettings.GetEvents;
             //Program.PollingRate = 50;
         }
     }
@@ -51,6 +52,8 @@ namespace IIQCompare
         public int NumberOfBreakouts { get; set; } = 10;
         public int HTTPTimeoutMinutes { get; set; } = 2;
         public int RestartAfterCount { get; set; } = 500;
+        public bool GetEvents { get; set; } = true;
+
     }
 
     [JsonSerializable(typeof(ConfigOptions))]

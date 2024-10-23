@@ -36,18 +36,33 @@ namespace Endpoints
 
         public static JsonTypes.GraphFormat.Root ParseJson(string json, string clusterGUID, string clusterName)
         {
-            using (JsonDocument document = JsonDocument.Parse(json))
+            try
             {
-                JsonElement rootElement = document.RootElement;
-
-                // Recursively check for null values in the JSON structure
-                bool hasNullValues = IsChartDataEmty(rootElement);
-
-                if (hasNullValues)
+                using (JsonDocument document = JsonDocument.Parse(json))
                 {
-                    Console.WriteLine("chart_data in json structure is empty. Cluster not initialized?");
+                    JsonElement rootElement = document.RootElement;
+
+                    // Recursively check for null values in the JSON structure
+                    bool hasNullValues = IsChartDataEmty(rootElement);
+
+                    if (hasNullValues)
+                    {
+                        Console.WriteLine("chart_data in json structure is empty. Cluster not initialized?");
+                    }
                 }
             }
+            catch (Exception e)
+            {
+
+                if (Program.Debug)
+                {
+                    Console.WriteLine("Error parsing JSON");
+                    Console.WriteLine(e.Message);
+                }
+
+                IIQCompare.Program.LogExceptionToFile(e);
+            }
+
 
             JsonTypes.GraphFormat.Root root = null;
             try

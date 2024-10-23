@@ -5,9 +5,11 @@ namespace IIQCompare
     public class CreateMetricEventData
     {
         private string errorDataEmpty = "Error: Event data response is empty for {0}, cluster {1}";
-
-        public static void Create(List<JsonTypes.EventFormat.ActiveEvents> output, Gauge gaugeSev1, Gauge gaugeSev2, Gauge gaugeSev3, Gauge gaugeDiskBroken)
+        public static async void Create(string metricName, string helpText, string[] labelNames)
         {
+            var output = await Endpoints.GetEvents.Get();
+            var gauge = MetricsConfiguration.CreateOrGetGauge(metricName, helpText, labelNames);
+
             string errorDataEmpty = "Error: Event data response is empty for {0}, cluster {1}";
 
             // Update the metric values dynamically for each server
@@ -23,14 +25,22 @@ namespace IIQCompare
                     double severity2Count = cluster.ActiveEventsList.Count(e => e.Severity == 2);
                     double severity3Count = cluster.ActiveEventsList.Count(e => e.Severity == 3);
                     double driveFailureCount = cluster.ActiveEventsList.Count(e => e.Message.Contains("One or more drives"));
-                    //Console.WriteLine((double)closestDataPoint.Value);
-                    gaugeSev1.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(severity1Count);
-                    gaugeSev2.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(severity2Count);
-                    gaugeSev3.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(severity3Count);
-                    gaugeDiskBroken.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(driveFailureCount);
-
-
-                    // }
+                    if (metricName.Contains("one"))
+                    {
+                        gauge.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(severity1Count);
+                    }
+                    if (metricName.Contains("two"))
+                    {
+                        gauge.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(severity2Count);
+                    }
+                    if (metricName.Contains("three"))
+                    {
+                        gauge.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(severity3Count);
+                    }
+                    if (metricName.Contains("broken"))
+                    {
+                        gauge.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(driveFailureCount);
+                    }
                 }
             }
         }

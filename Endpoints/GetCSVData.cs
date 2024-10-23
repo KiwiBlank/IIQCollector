@@ -18,7 +18,7 @@ namespace Endpoints
                 string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
                 try
                 {
-                    List<JsonTypes.GraphCSVFormat.NodeData> parsedRoot = ParseCSV(result, cluster.Guid, cluster.Name, forLNN);
+                    List<JsonTypes.GraphCSVFormat.NodeData> parsedRoot = ParseCSV(result, cluster.Guid, cluster.Name, forLNN, dataKey);
                     clusterReports.Add(parsedRoot);
                 }
                 catch (Exception e)
@@ -37,7 +37,7 @@ namespace Endpoints
         }
 
 
-        public static List<JsonTypes.GraphCSVFormat.NodeData> ParseCSV(string csv, string clusterGUID, string clusterName, bool forLNN)
+        public static List<JsonTypes.GraphCSVFormat.NodeData> ParseCSV(string csv, string clusterGUID, string clusterName, bool forLNN, string dataKey)
         {
             var lines = csv.Trim().Split('\n');
             var headers = lines[0].Split(',').Select(h => h.Trim()).ToList();
@@ -45,7 +45,7 @@ namespace Endpoints
             // Check if the CSV contains error "ERROR: There is no data available at this time."
             if (headers.Any(h => h.Contains("ERROR: There is no data available at this time")))
             {
-                Console.WriteLine("Error: CSV data contains an error message. No data available for cluster {0}", clusterName);
+                Console.WriteLine("Error: CSV data contains an error message. No data available for cluster {0} on key {1}", clusterName, dataKey);
                 return null;
             }
 
@@ -57,15 +57,21 @@ namespace Endpoints
 
                 if (values.Length < 2 || values.Length % 2 != 0)
                 {
-                    Console.WriteLine("Error: Row {i} has an incorrect number of columns");
-                    continue;
+                    if (Program.Debug)
+                    {
+                        Console.WriteLine("Error: Row {0} has an incorrect number of columns for cluster {1} on key {2}", i, clusterName, dataKey);
+                        continue;
+                    }
                 }
 
                 double time;
                 if (!double.TryParse(values[0], NumberStyles.Any, CultureInfo.InvariantCulture, out time))
                 {
-                    Console.WriteLine("Error: Unable to parse time value at row {i}");
-                    continue;
+                    if (Program.Debug)
+                    {
+                        Console.WriteLine("Error: Unable to parse time value at row {0} for cluster {1} on key {2}", i, clusterName, dataKey);
+                        continue;
+                    }
                 }
 
                 List<JsonTypes.GraphCSVFormat.NodeInfo> nodeValues = new List<JsonTypes.GraphCSVFormat.NodeInfo>();
@@ -84,14 +90,20 @@ namespace Endpoints
                         string nodeNumberStr = header.Substring(5, header.IndexOf(" (") - 5); // Get the number part
                         if (!int.TryParse(nodeNumberStr, out nodeNumber))
                         {
-                            Console.WriteLine("Error: Invalid node format at row {i}, column {j + 1}");
-                            continue;
+                            if (Program.Debug)
+                            {
+                                Console.WriteLine("Error: Invalid node format at row {0}, column {1} for cluster {2} on key {3}", i, (j + 1), clusterName, dataKey);
+                                continue;
+                            }
                         }
                     }
                     double nodePercent;
                     if (!double.TryParse(values[j], NumberStyles.Any, CultureInfo.InvariantCulture, out nodePercent))
                     {
-                        Console.WriteLine("Error: Unable to parse node value for node {nodeNumber} at row {i}");
+                        if (Program.Debug)
+                        {
+                            Console.WriteLine("Error: Unable to parse node value for node {0} at row {1} for cluster {2} on key {3}", nodeNumber, i, clusterName, dataKey);
+                        }
                         continue;
                     }
 
