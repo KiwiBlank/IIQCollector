@@ -25,6 +25,7 @@ namespace IIQCompare
         public static int NumBreakouts;
         public static int HTTPTimeoutMinutes;
         public static int RestartAfterCount;
+        public static bool GetEvents;
         public static HttpClient HTTPPrepare()
         {
             HttpClient httpClient = new HttpClient(HandlerClient);
