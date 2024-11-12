@@ -94,7 +94,7 @@ namespace IIQCompare
                         CreateMetricGraphData.Create("connected", "Cluster connected clients", new[] { "cluster_guid", "cluster_name" });
                         //CreateMetricGraphData.Create("pp_latency_read", "Cluster workload latency read", new[] { "cluster_guid", "cluster_name" });
                         //CreateMetricGraphData.Create("pp_latency_write", "Cluster workload latency write", new[] { "cluster_guid", "cluster_name" });
-                        CreateMetricGraphData.Create("ext_latency", "Cluster protocol latency", new[] { "cluster_guid", "cluster_name" });
+                        //CreateMetricGraphData.Create("ext_latency", "Cluster protocol latency", new[] { "cluster_guid", "cluster_name" });
                         CreateMetricGraphData.Create("op_rate", "Cluster operation rate", new[] { "cluster_guid", "cluster_name" });
                         CreateMetricGraphData.Create("ext_errors", "Cluster net errors rate", new[] { "cluster_guid", "cluster_name" });
 
@@ -106,6 +106,7 @@ namespace IIQCompare
                             CreateMetricGraphCSVData.Create("ext_net__3", "Cluster SIQ ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&no_min_max=true"));
                             CreateMetricGraphCSVData.Create("ext_net__4", "Cluster SMB ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
                             CreateMetricGraphCSVData.Create("op_rate__2", "Cluster SMB Op rate", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
+                            CreateMetricGraphCSVData.Create("ext_latency", "Cluster SMB Latency", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
 
                         }
 

@@ -43,11 +43,13 @@ namespace Endpoints
             {
                 if (Program.Debug)
                 {
-                    Console.WriteLine("Error sending HTTP request");
+                    Console.WriteLine("Error deserializing EventFormat for {0}", clusterName);
                     Console.WriteLine(e.Message);
                 }
 
                 IIQCompare.Program.LogExceptionToFile(e);
+                Console.WriteLine("Error deserializing EventFormat for {0}", clusterName);
+
             }
 
             return root;

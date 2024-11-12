@@ -56,11 +56,12 @@ namespace Endpoints
 
                 if (Program.Debug)
                 {
-                    Console.WriteLine("Error parsing JSON");
+                    Console.WriteLine("Error parsing json for {0}", clusterName);
                     Console.WriteLine(e.Message);
                 }
 
                 IIQCompare.Program.LogExceptionToFile(e);
+                Console.WriteLine("Error parsing json for {0}", clusterName);
             }
 
 
@@ -76,11 +77,12 @@ namespace Endpoints
             {
                 if (Program.Debug)
                 {
-                    Console.WriteLine("Error sending HTTP request");
+                    Console.WriteLine("Error deserializing GraphFormat for {0}", clusterName);
                     Console.WriteLine(e.Message);
                 }
 
                 IIQCompare.Program.LogExceptionToFile(e);
+                Console.WriteLine("Error deserializing GraphFormat for {0}", clusterName);
             }
 
             return root;
