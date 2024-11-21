@@ -49,7 +49,7 @@ namespace IIQCompare
                 }
                 else
                 {
-                    Console.WriteLine("CSV Empty");
+                    Console.WriteLine("CSV Empty for metric {0}", metricName);
                 }
             }
         }
