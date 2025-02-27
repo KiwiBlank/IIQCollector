@@ -51,7 +51,7 @@ namespace IIQCompare
         public bool Debug { get; set; } = false;
         public int NumberOfBreakouts { get; set; } = 10;
         public int HTTPTimeoutMinutes { get; set; } = 2;
-        public int RestartAfterCount { get; set; } = 500;
+        public int RestartAfterCount { get; set; } = 500000;
         public bool GetEvents { get; set; } = true;
 
     }

@@ -10,14 +10,23 @@ namespace IIQCompare
     {
         public static bool CheckSessionResponse(string json)
         {
+            if (Program.Debug)
+            {
+                Console.WriteLine("Writing session response:{0}", json);
+                Program.LogExceptionToFile(new Exception(String.Format("Writing session response after expiry:{0}", json)));
+            } else
+            {
+                Console.WriteLine("Checking session status");
+            }
+
             using (JsonDocument doc = JsonDocument.Parse(json))
             {
                 JsonElement root = doc.RootElement;
 
-                if (root.TryGetProperty("message", out _))
-                {
-                    return false;
-                }
+                //if (root.TryGetProperty("message", out _))
+                //{
+                //    return false;
+                //}
 
                 if (root.TryGetProperty("username", out _))
                 {
@@ -34,8 +43,10 @@ namespace IIQCompare
             string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
             if (!CheckSessionResponse(result))
             {
+                Console.WriteLine("Session detected as expired");
+                Program.LogExceptionToFile(new Exception("Session detected as expired"));
                 //Session expired, reauth
-                AuthIIQ.AuthenticateIIQ();
+                await AuthIIQ.AuthenticateIIQ();
             }
         }
 
@@ -67,6 +78,8 @@ namespace IIQCompare
                         itCounter++;
                         if (itCounter > Program.RestartAfterCount && !Program.Debug)
                         {
+                            Console.WriteLine("Restarting because of counter");
+                            Program.LogExceptionToFile(new Exception("Restarting because of counter"));
                             Process.Start(Process.GetCurrentProcess().MainModule.FileName);
                             Environment.Exit(0);
                         }
@@ -101,12 +114,15 @@ namespace IIQCompare
 
                         if (Program.GetCSV)
                         {
-                            CreateMetricGraphCSVData.Create("cpu__2", "Cluster cpu usage lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("ext_net__2", "Cluster ext net lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}", Program.NumBreakouts));
+                            CreateMetricGraphCSVData.Create("cpu__2", "Cluster cpu usage lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
+                            CreateMetricGraphCSVData.Create("ext_net__2", "Cluster ext net lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
                             CreateMetricGraphCSVData.Create("ext_net__3", "Cluster SIQ ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&no_min_max=true"));
                             CreateMetricGraphCSVData.Create("ext_net__4", "Cluster SMB ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
                             CreateMetricGraphCSVData.Create("op_rate__2", "Cluster SMB Op rate", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
                             CreateMetricGraphCSVData.Create("ext_latency", "Cluster SMB Latency", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
+                            CreateMetricGraphCSVData.Create("cluster_used__2", "Cluster used bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
+                            CreateMetricGraphCSVData.Create("cluster_total__2", "Cluster total bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
+                            CreateMetricGraphCSVData.Create("cluster_writeable__2", "Cluster writeable bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
 
                         }
 

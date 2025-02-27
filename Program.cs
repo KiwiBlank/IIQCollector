@@ -90,26 +90,42 @@ namespace IIQCompare
             }
 
             // Optionally, also write to the console
-            Console.WriteLine("An error occurred. Details have been written to: " + logFilePath);
+            Console.WriteLine("Exception. Details have been written to: " + logFilePath);
         }
 
         private static async Task GetClusters()
         {
             HttpClient client = HTTPPrepare();
-            HttpResponseMessage response;
-            try
+            HttpResponseMessage response = null;
+            int maxRetries = 3;
+            int retryCount = 0;
+
+            while (retryCount < maxRetries)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/clustermanager/v1/clusters", IIQHostAdress);
-                response = await client.GetAsync(httpEndpoint);
-                response.EnsureSuccessStatusCode();
+                try
+                {
+                    string httpEndpoint = String.Format("{0}/insightiq/rest/clustermanager/v1/clusters", IIQHostAdress);
+                    response = await client.GetAsync(httpEndpoint);
+                    response.EnsureSuccessStatusCode();
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error getting clusters from IIQ");
+                    retryCount++;
+                    if (retryCount >= maxRetries)
+                    {
+                        Console.WriteLine("Maximum retry attempts reached");
+                        Console.WriteLine(e.Message);
+                        LogExceptionToFile(e);
+                        throw;
+                    }
+                    Console.WriteLine("Trying to get clusters again");
+                    await Task.Delay(2000); // Wait before retrying
+                }
+
             }
-            catch (Exception e)
-            {
-                Console.WriteLine("Error getting clusters from IIQ");
-                Console.WriteLine(e.Message);
-                LogExceptionToFile(e);
-                throw;
-            }
+
             List<JsonTypes.Cluster.Result> resultsList;
             string readJson = await response.Content.ReadAsStringAsync();
             try
@@ -141,6 +157,7 @@ namespace IIQCompare
             {
                 return true;
             };
+            //await Task.Delay(2000);
             await AuthIIQ.AuthenticateIIQ();
             await GetClusters();
             long currentUnixTimeMillis = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
