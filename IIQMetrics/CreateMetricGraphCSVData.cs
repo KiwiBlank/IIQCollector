@@ -11,7 +11,6 @@ namespace IIQCompare
             var output = await Endpoints.GetCSVData.Get(Regex.Replace(metricName, "__.*", ""), filters, forLNN);
             var gauge = MetricsConfiguration.CreateOrGetGauge(metricName, helpText, labelNames);
 
-            // Update the metric values dynamically for each server
             foreach (var cluster in output)
             {
                 if (cluster == null)
@@ -31,7 +30,6 @@ namespace IIQCompare
                     {
                         foreach (var item in closestDataPoint.Nodes)
                         {
-                            //Console.WriteLine((double)item.Data);
                             gauge.WithLabels(closestDataPoint.ClusterGUID, closestDataPoint.ClusterName, item.Node.ToString()).Set((double)item.Data);
                         }
                     }
@@ -39,12 +37,9 @@ namespace IIQCompare
                     {
                         foreach (var item in closestDataPoint.Nodes)
                         {
-                            //Console.WriteLine((double)item.Data);
                             gauge.WithLabels(closestDataPoint.ClusterGUID, closestDataPoint.ClusterName).Set((double)item.Data);
                         }
                     }
-
-
 
                 }
                 else

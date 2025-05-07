@@ -11,7 +11,7 @@ namespace IIQCompare
             var output = await Endpoints.GetGraphData.Get(metricName);
             string errorDataEmpty = "Error: Chartdata response is empty for {0}, cluster {1}";
             var gauge = MetricsConfiguration.CreateOrGetGauge(metricName, helpText, labelNames);
-            // Update the metric values dynamically for each server
+
             foreach (var cluster in output)
             {
                 if (cluster == null)
@@ -27,11 +27,8 @@ namespace IIQCompare
                     {
                         closestDataPoint = cluster.ChartData[0].Data.LastOrDefault();
                     }
-                    //Console.WriteLine((double)closestDataPoint.Value);
                     gauge.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set((double)closestDataPoint.Value);
 
-
-                    // }
                 }
                 else
                 {
