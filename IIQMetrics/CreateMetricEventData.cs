@@ -1,6 +1,6 @@
 ﻿using Prometheus;
 
-namespace IIQCompare
+namespace IIQCollector
 {
     public class CreateMetricEventData
     {

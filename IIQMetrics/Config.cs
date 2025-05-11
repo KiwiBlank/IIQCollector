@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace IIQCompare
+namespace IIQCollector
 {
     public class Config
     {
@@ -32,6 +32,8 @@ namespace IIQCompare
             Program.HTTPTimeoutMinutes = appSettings.HTTPTimeoutMinutes;
             Program.RestartAfterCount = appSettings.RestartAfterCount;
             Program.GetEvents = appSettings.GetEvents;
+            Program.GetClients = appSettings.GetClients;
+            Program.GetHeat = appSettings.GetHeat;
             //Program.PollingRate = 50;
         }
     }
@@ -53,6 +55,9 @@ namespace IIQCompare
         public int HTTPTimeoutMinutes { get; set; } = 2;
         public int RestartAfterCount { get; set; } = 500000;
         public bool GetEvents { get; set; } = true;
+        public bool GetClients { get; set; } = true;
+        public bool GetHeat { get; set; } = false;
+
 
     }
 

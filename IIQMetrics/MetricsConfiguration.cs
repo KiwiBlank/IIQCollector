@@ -1,11 +1,12 @@
-﻿using Prometheus;
+﻿using Endpoints;
+using Prometheus;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.Text.Json;
 
-namespace IIQCompare
+namespace IIQCollector
 {
     public class MetricsConfiguration
     {
@@ -39,9 +40,9 @@ namespace IIQCompare
 
         public static async Task GetSession()
         {
-            HttpClient client = IIQCompare.Program.HTTPPrepare();
-            string httpEndpoint = String.Format("{0}/insightiq/rest/security-iam/v1/auth/session", IIQCompare.Program.IIQHostAdress);
-            string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
+            HttpClient client = IIQCollector.Program.HTTPPrepare();
+            string httpEndpoint = String.Format("{0}/insightiq/rest/security-iam/v1/auth/session", IIQCollector.Program.IIQHostAdress);
+            string result = IIQCollector.Program.HTTPSend(client, httpEndpoint, false).Result;
             if (!CheckSessionResponse(result))
             {
                 Console.WriteLine("Session detected as expired");
@@ -94,7 +95,6 @@ namespace IIQCompare
                         {
                             if (Program.GetEvents)
                             {
-                                List<JsonTypes.EventFormat.ActiveEvents> clusterEvents = await Endpoints.GetEvents.Get();
                                 CreateMetricEventData.Create("cluster_event_sev_one", "Cluster sev 1 events", new[] { "cluster_guid", "cluster_name" });
                                 CreateMetricEventData.Create("cluster_event_sev_two", "Cluster sev 2 events", new[] { "cluster_guid", "cluster_name" });
                                 CreateMetricEventData.Create("cluster_event_sev_three", "Cluster sev 3 events", new[] { "cluster_guid", "cluster_name" });
@@ -122,48 +122,50 @@ namespace IIQCompare
                         CreateMetricGraphData.Create("ext_errors", "Cluster net errors rate", new[] { "cluster_guid", "cluster_name" });
 
 
-
                         if (Program.GetCSV)
                         {
-                            CreateMetricGraphCSVData.Create("cpu__2", "Cluster cpu usage lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("ext_net__2", "Cluster ext net lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("ext_net__3", "Cluster SIQ ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_net__4", "Cluster SMB ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_net__5", "Cluster SIQ ext net out", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:out&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_net__6", "Cluster SIQ ext net in", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:in&no_min_max=true"));
-                            
-                            CreateMetricGraphCSVData.Create("op_rate__2", "Cluster SMB Op rate", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));                        
-                            CreateMetricGraphCSVData.Create("op_rate__3", "Cluster SMB Op rate write", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:write&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("op_rate__4", "Cluster SMB Op rate read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:read&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("op_rate__5", "Cluster SMB Op rate create", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:create&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("op_rate__6", "Cluster SMB Op rate other", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:other&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("op_rate__7", "Cluster SMB Op rate namespace_read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:namespace_read&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("op_rate__8", "Cluster SMB Op rate file_state", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:file_state&no_min_max=true"));
+                            if (Program.GetHeat)
+                            {
+                                CreateMetricGraphCSVData.Create("ifs_heat", "Cluster cpu usage lnn", new[] { "cluster_guid", "cluster_name" }, false, String.Format("%7Cpath%7C1000&no_min_max=true"), true);
+                            }
+                            CreateMetricGraphCSVData.Create("cpu__2", "Cluster cpu usage lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
+                            CreateMetricGraphCSVData.Create("ext_net__2", "Cluster ext net lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
+                            CreateMetricGraphCSVData.Create("ext_net__3", "Cluster SIQ ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_net__4", "Cluster SMB ext net", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_net__5", "Cluster SIQ ext net out", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:out&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_net__6", "Cluster SIQ ext net in", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:in&no_min_max=true"), false);
 
-                            CreateMetricGraphCSVData.Create("ext_latency", "Cluster SMB Latency", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__2", "Cluster SIQ Latency out", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:out&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__3", "Cluster SIQ Latency in", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:in&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__4", "Cluster SMB Latency write", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:write&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__5", "Cluster SMB Latency read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:read&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__6", "Cluster SMB Latency create", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:create&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__7", "Cluster SMB Latency other", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:other&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__8", "Cluster SMB Latency namespace_read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:namespace_read&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("ext_latency__9", "Cluster SMB Latency file_state", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:file_state&no_min_max=true"));
+                            CreateMetricGraphCSVData.Create("op_rate__2", "Cluster SMB Op rate", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("op_rate__3", "Cluster SMB Op rate write", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:write&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("op_rate__4", "Cluster SMB Op rate read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:read&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("op_rate__5", "Cluster SMB Op rate create", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:create&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("op_rate__6", "Cluster SMB Op rate other", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:other&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("op_rate__7", "Cluster SMB Op rate namespace_read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:namespace_read&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("op_rate__8", "Cluster SMB Op rate file_state", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:file_state&no_min_max=true"), false);
 
-                            CreateMetricGraphCSVData.Create("cluster_used__2", "Cluster used bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("cluster_total__2", "Cluster total bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("cluster_writeable__2", "Cluster writeable bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
+                            CreateMetricGraphCSVData.Create("ext_latency", "Cluster SMB Latency", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__2", "Cluster SIQ Latency out", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:out&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__3", "Cluster SIQ Latency in", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:siq&filter=direction:in&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__4", "Cluster SMB Latency write", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:write&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__5", "Cluster SMB Latency read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:read&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__6", "Cluster SMB Latency create", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:create&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__7", "Cluster SMB Latency other", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:other&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__8", "Cluster SMB Latency namespace_read", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:namespace_read&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("ext_latency__9", "Cluster SMB Latency file_state", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=proto_name:smb2&filter=op_class:file_state&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("cluster_used__2", "Cluster used bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
+                            CreateMetricGraphCSVData.Create("cluster_total__2", "Cluster total bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
+                            CreateMetricGraphCSVData.Create("cluster_writeable__2", "Cluster writeable bytes lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
                             
-                            CreateMetricGraphCSVData.Create("active_job", "Cluster active flexprotect jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:FlexProtect&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("active_job__2", "Cluster active flexprotectlin jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:FlexProtectLin&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("active_job__3", "Cluster active collect jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:Collect&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("active_job__4", "Cluster active smartpools jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:SmartPools&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("active_job__5", "Cluster active autobalance jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:AutoBalance&no_min_max=true"));
-                            CreateMetricGraphCSVData.Create("active_job__6", "Cluster active autobalancelin jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:AutoBalanceLin&no_min_max=true"));
+                            CreateMetricGraphCSVData.Create("active_job", "Cluster active flexprotect jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:FlexProtect&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("active_job__2", "Cluster active flexprotectlin jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:FlexProtectLin&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("active_job__3", "Cluster active collect jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:Collect&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("active_job__4", "Cluster active smartpools jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:SmartPools&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("active_job__5", "Cluster active autobalance jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:AutoBalance&no_min_max=true"), false);
+                            CreateMetricGraphCSVData.Create("active_job__6", "Cluster active autobalancelin jobs", new[] { "cluster_guid", "cluster_name" }, false, String.Format("&filter=job_name:AutoBalanceLin&no_min_max=true"), false);
                             
-                            CreateMetricGraphCSVData.Create("disk_adv_busy", "Cluster disk activity busy lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("disk_adv_access_slow", "Cluster disk slow lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
-                            CreateMetricGraphCSVData.Create("disk_adv_access_latency", "Cluster disk latency lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts));
+                            CreateMetricGraphCSVData.Create("disk_adv_busy", "Cluster disk activity busy lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
+                            CreateMetricGraphCSVData.Create("disk_adv_access_slow", "Cluster disk slow lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
+                            CreateMetricGraphCSVData.Create("disk_adv_access_latency", "Cluster disk latency lnn", new[] { "cluster_guid", "cluster_name", "lnn" }, true, String.Format("%7Clnn%7C{0}&no_min_max=true", Program.NumBreakouts), false);
 
                         }
 
@@ -174,6 +176,14 @@ namespace IIQCompare
                                 continue;
                             }
                             clusterDedupeRatioMetric.WithLabels(cluster.ClusterGUID, cluster.ClusterName).Set(((double)cluster.DedupeRatio));
+                        }
+                        if (Program.GetClients)
+                        {
+                            List<JsonTypes.Clients.ClientStats> clientStatsOutput = await Endpoints.GetClients.Get();
+                            CreateMetricClientsData.Create("client_op_rate", "Cluster client op rate", new[] { "cluster_guid", "cluster_name", "client_ip" }, "op_rate", clientStatsOutput);
+                            CreateMetricClientsData.Create("client_write_rate", "Cluster client write rate", new[] { "cluster_guid", "cluster_name", "client_ip" }, "write_rate", clientStatsOutput);
+                            CreateMetricClientsData.Create("client_read_rate", "Cluster client read rate", new[] { "cluster_guid", "cluster_name", "client_ip" }, "read_rate", clientStatsOutput);
+                            CreateMetricClientsData.Create("client_byte_rate", "Cluster client byte rate", new[] { "cluster_guid", "cluster_name", "client_ip" }, "byte_rate", clientStatsOutput);
                         }
 
                         foreach (var cluster in Program.ClusterList)
@@ -198,7 +208,7 @@ namespace IIQCompare
                         }
                         Console.WriteLine("Error processing metrics");
 
-                        IIQCompare.Program.LogExceptionToFile(e);
+                        IIQCollector.Program.LogExceptionToFile(e);
                     }
 
                     await Task.Delay(TimeSpan.FromSeconds(Program.PollingRate));

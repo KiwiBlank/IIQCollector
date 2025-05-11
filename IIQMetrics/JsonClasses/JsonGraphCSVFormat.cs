@@ -15,6 +15,8 @@ namespace JsonTypes.GraphCSVFormat
     {
         public int Node { get; set; }
         public double Data { get; set; }
+        public string Path { get; set; }
+
     }
     [JsonSerializable(typeof(NodeData))]
     internal partial class SourceGeneratorContextv : JsonSerializerContext

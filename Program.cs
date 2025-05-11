@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 
-namespace IIQCompare
+namespace IIQCollector
 {
     public class Program
     {
@@ -26,6 +26,9 @@ namespace IIQCompare
         public static int HTTPTimeoutMinutes;
         public static int RestartAfterCount;
         public static bool GetEvents;
+        public static bool GetClients;
+        public static bool GetHeat;
+
         public static HttpClient HTTPPrepare()
         {
             HttpClient httpClient = new HttpClient(HandlerClient);

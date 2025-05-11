@@ -2,13 +2,15 @@
 using System.Collections.Concurrent;
 using System.Text.RegularExpressions;
 
-namespace IIQCompare
+namespace IIQCollector
 {
     public class CreateMetricGraphCSVData
     {
-    public static async void Create(string metricName, string helpText, string[] labelNames, bool forLNN, string filters)
-        { // &filter=proto_name:smb2
-            var output = await Endpoints.GetCSVData.Get(Regex.Replace(metricName, "__.*", ""), filters, forLNN);
+    public static async void Create(string metricName, string helpText, string[] labelNames, bool forLNN, string filters, bool forPath)
+        {
+           // _ = Task.Run(async delegate
+           // {
+            var output = await Endpoints.GetCSVData.Get(Regex.Replace(metricName, "__.*", ""), filters, forLNN, forPath);
             var gauge = MetricsConfiguration.CreateOrGetGauge(metricName, helpText, labelNames);
 
             foreach (var cluster in output)
@@ -33,20 +35,27 @@ namespace IIQCompare
                             gauge.WithLabels(closestDataPoint.ClusterGUID, closestDataPoint.ClusterName, item.Node.ToString()).Set((double)item.Data);
                         }
                     }
-                    else
+                    if (!forLNN && !forPath)
                     {
                         foreach (var item in closestDataPoint.Nodes)
                         {
                             gauge.WithLabels(closestDataPoint.ClusterGUID, closestDataPoint.ClusterName).Set((double)item.Data);
                         }
                     }
-
+                    if (forPath)
+                    {
+                        foreach (var item in closestDataPoint.Nodes)
+                        {
+                            gauge.WithLabels(closestDataPoint.ClusterGUID, closestDataPoint.ClusterName, item.Path).Set((double)item.Data);
+                        }
+                    }
                 }
                 else
                 {
                     Console.WriteLine("CSV Empty for metric {0}", metricName);
                 }
             }
+           //});
         }
 
         public static JsonTypes.GraphCSVFormat.NodeData FindClosest(List<JsonTypes.GraphCSVFormat.NodeData> data, long targetTime)

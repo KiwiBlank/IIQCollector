@@ -1,4 +1,4 @@
-﻿using IIQCompare;
+﻿using IIQCollector;
 using JsonTypes.GraphFormat;
 using System.Text.Json;
 
@@ -9,13 +9,13 @@ namespace Endpoints
         public static async Task<List<JsonTypes.GraphFormat.Root>> Get(string dataKey)
         {
 
-            HttpClient client = IIQCompare.Program.HTTPPrepare();
+            HttpClient client = IIQCollector.Program.HTTPPrepare();
             List<JsonTypes.GraphFormat.Root> clusterReports = new List<JsonTypes.GraphFormat.Root>();
 
-            foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
+            foreach (JsonTypes.Cluster.Result cluster in IIQCollector.Program.ClusterList)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/graph_data?no_min_max=true&key={1}&cluster={2}", IIQCompare.Program.IIQHostAdress, dataKey, cluster.Guid);
-                string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/graph_data?no_min_max=true&key={1}&cluster={2}", IIQCollector.Program.IIQHostAdress, dataKey, cluster.Guid);
+                string result = IIQCollector.Program.HTTPSend(client, httpEndpoint, false).Result;
 
                 JsonTypes.GraphFormat.Root parsedRoot = ParseJson(result, cluster.Guid, cluster.Name);
                 clusterReports.Add(parsedRoot);
@@ -60,7 +60,7 @@ namespace Endpoints
                     Console.WriteLine(e.Message);
                 }
 
-                IIQCompare.Program.LogExceptionToFile(e);
+                IIQCollector.Program.LogExceptionToFile(e);
                 Console.WriteLine("Error parsing json for {0}", clusterName);
             }
 
@@ -81,7 +81,7 @@ namespace Endpoints
                     Console.WriteLine(e.Message);
                 }
 
-                IIQCompare.Program.LogExceptionToFile(e);
+                IIQCollector.Program.LogExceptionToFile(e);
                 Console.WriteLine("Error deserializing GraphFormat for {0}", clusterName);
             }
 

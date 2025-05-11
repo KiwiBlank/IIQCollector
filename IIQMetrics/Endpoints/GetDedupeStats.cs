@@ -1,5 +1,5 @@
-﻿using IIQCompare;
-using JsonTypes.Dedupe;
+﻿using IIQCollector;
+using JsonTypes.Clients;
 using System.Text.Json;
 
 namespace Endpoints
@@ -8,14 +8,14 @@ namespace Endpoints
     {
         public static async Task<List<JsonTypes.Dedupe.Format>> Get()
         {
-            HttpClient client = IIQCompare.Program.HTTPPrepare();
+            HttpClient client = IIQCollector.Program.HTTPPrepare();
             List<JsonTypes.Dedupe.Format> clusterReports = new List<JsonTypes.Dedupe.Format>();
 
-            foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
+            foreach (JsonTypes.Cluster.Result cluster in IIQCollector.Program.ClusterList)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/drr/{1}/overview", IIQCompare.Program.IIQHostAdress, cluster.Guid);
-                string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
-                Format parsedRoot = ParseJson(result, cluster.Guid, cluster.Name);
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/drr/{1}/overview", IIQCollector.Program.IIQHostAdress, cluster.Guid);
+                string result = IIQCollector.Program.HTTPSend(client, httpEndpoint, false).Result;
+                JsonTypes.Dedupe.Format parsedRoot = ParseJson(result, cluster.Guid, cluster.Name);
                 clusterReports.Add(parsedRoot);
             }
 
@@ -28,7 +28,7 @@ namespace Endpoints
 
             try
             {
-                root = JsonSerializer.Deserialize<JsonTypes.Dedupe.Format>(json, SourceGeneratorContextd.Default.Format);
+                root = JsonSerializer.Deserialize<JsonTypes.Dedupe.Format>(json, JsonTypes.Dedupe.SourceGeneratorContextd.Default.Format);
 
                 root.ClusterGUID = clusterGUID;
                 root.ClusterName = clusterName;
@@ -41,7 +41,7 @@ namespace Endpoints
                     Console.WriteLine(e.Message);
                 }
 
-                IIQCompare.Program.LogExceptionToFile(e);
+                IIQCollector.Program.LogExceptionToFile(e);
             }
 
             return root;

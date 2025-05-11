@@ -1,4 +1,5 @@
-﻿using IIQCompare;
+﻿using IIQCollector;
+using JsonTypes.Clients;
 using System.Globalization;
 
 namespace Endpoints
@@ -6,19 +7,19 @@ namespace Endpoints
 
     public class GetCSVData
     {
-        public static async Task<List<List<JsonTypes.GraphCSVFormat.NodeData>>> Get(string dataKey, string filters, bool forLNN)
+        public static async Task<List<List<JsonTypes.GraphCSVFormat.NodeData>>> Get(string dataKey, string filters, bool forLNN, bool forPath)
         {
 
-            HttpClient client = IIQCompare.Program.HTTPPrepare();
+            HttpClient client = IIQCollector.Program.HTTPPrepare();
             List<List<JsonTypes.GraphCSVFormat.NodeData>> clusterReports = new List<List<JsonTypes.GraphCSVFormat.NodeData>>();
 
-            foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
+            foreach (JsonTypes.Cluster.Result cluster in IIQCollector.Program.ClusterList)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/download_data?no_min_max=true&key={1}{2}&cluster={3}", IIQCompare.Program.IIQHostAdress, dataKey, filters, cluster.Guid);
-                string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/download_data?no_min_max=true&key={1}{2}&cluster={3}", IIQCollector.Program.IIQHostAdress, dataKey, filters, cluster.Guid);
+                string result = IIQCollector.Program.HTTPSend(client, httpEndpoint, false).Result;
                 try
                 {
-                    List<JsonTypes.GraphCSVFormat.NodeData> parsedRoot = ParseCSV(result, cluster.Guid, cluster.Name, forLNN, dataKey);
+                    List<JsonTypes.GraphCSVFormat.NodeData> parsedRoot = ParseCSV(result, cluster.Guid, cluster.Name, forLNN, dataKey, forPath);
                     clusterReports.Add(parsedRoot);
                 }
                 catch (Exception e)
@@ -29,7 +30,7 @@ namespace Endpoints
                         Console.WriteLine(e.Message);
                     }
 
-                    IIQCompare.Program.LogExceptionToFile(e);
+                    IIQCollector.Program.LogExceptionToFile(e);
                 }
             }
 
@@ -37,7 +38,7 @@ namespace Endpoints
         }
 
 
-        public static List<JsonTypes.GraphCSVFormat.NodeData> ParseCSV(string csv, string clusterGUID, string clusterName, bool forLNN, string dataKey)
+        public static List<JsonTypes.GraphCSVFormat.NodeData> ParseCSV(string csv, string clusterGUID, string clusterName, bool forLNN, string dataKey, bool forPath)
         {
             var lines = csv.Trim().Split('\n');
             var headers = lines[0].Split(',').Select(h => h.Trim()).ToList();
@@ -76,13 +77,12 @@ namespace Endpoints
 
                 List<JsonTypes.GraphCSVFormat.NodeInfo> nodeValues = new List<JsonTypes.GraphCSVFormat.NodeInfo>();
                 int nodeNumber = 0;
+                string dataPath = "";
 
                 for (int j = 1; j < values.Length; j += 2)
                 {
                     if (forLNN)
                     {
-
-
                         string header = headers[j].Trim(); // Extract the header
                         if (!header.StartsWith("node:", StringComparison.OrdinalIgnoreCase))
                             continue;
@@ -97,6 +97,19 @@ namespace Endpoints
                             }
                         }
                     }
+                    if (forPath)
+                    {
+                        if (string.IsNullOrEmpty(values[j]))
+                        {
+                            break;
+                        }
+                        string header = headers[j].Trim(); // Extract the header
+                        if (!header.StartsWith("path:", StringComparison.OrdinalIgnoreCase))
+                            continue;
+
+                        dataPath = header.Substring(5, header.IndexOf(" (") - 5);
+
+                    }
                     double nodePercent;
                     if (!double.TryParse(values[j], NumberStyles.Any, CultureInfo.InvariantCulture, out nodePercent))
                     {
@@ -107,7 +120,7 @@ namespace Endpoints
                         continue;
                     }
 
-                    nodeValues.Add(new JsonTypes.GraphCSVFormat.NodeInfo { Node = nodeNumber, Data = nodePercent });
+                    nodeValues.Add(new JsonTypes.GraphCSVFormat.NodeInfo { Node = nodeNumber, Data = nodePercent, Path = dataPath });
                 }
                 nodeValues = nodeValues.OrderBy(n => n.Node).ToList();
                 nodeDataList.Add(new JsonTypes.GraphCSVFormat.NodeData { Time = time, Nodes = nodeValues, ClusterName = clusterName, ClusterGUID = clusterGUID });

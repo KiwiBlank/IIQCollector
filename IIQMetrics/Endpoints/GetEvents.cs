@@ -1,5 +1,5 @@
-﻿using IIQCompare;
-using JsonTypes.Dedupe;
+﻿using IIQCollector;
+using JsonTypes.Clients;
 using JsonTypes.EventFormat;
 using System;
 using System.Collections.Generic;
@@ -14,13 +14,13 @@ namespace Endpoints
     {
         public static async Task<List<JsonTypes.EventFormat.ActiveEvents>> Get()
         {
-            HttpClient client = IIQCompare.Program.HTTPPrepare();
+            HttpClient client = IIQCollector.Program.HTTPPrepare();
             List<JsonTypes.EventFormat.ActiveEvents> clusterReports = new List<JsonTypes.EventFormat.ActiveEvents>();
 
-            foreach (JsonTypes.Cluster.Result cluster in IIQCompare.Program.ClusterList)
+            foreach (JsonTypes.Cluster.Result cluster in IIQCollector.Program.ClusterList)
             {
-                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/summary/active_events?cluster={1}", IIQCompare.Program.IIQHostAdress, cluster.Guid);
-                string result = IIQCompare.Program.HTTPSend(client, httpEndpoint, false).Result;
+                string httpEndpoint = String.Format("{0}/insightiq/rest/reporting/v1/timeseries/summary/active_events?cluster={1}", IIQCollector.Program.IIQHostAdress, cluster.Guid);
+                string result = IIQCollector.Program.HTTPSend(client, httpEndpoint, false).Result;
                 JsonTypes.EventFormat.ActiveEvents parsedRoot = ParseJson(result, cluster.Guid, cluster.Name);
                 clusterReports.Add(parsedRoot);
             }
@@ -47,7 +47,7 @@ namespace Endpoints
                     Console.WriteLine(e.Message);
                 }
 
-                IIQCompare.Program.LogExceptionToFile(e);
+                IIQCollector.Program.LogExceptionToFile(e);
                 Console.WriteLine("Error deserializing EventFormat for {0}", clusterName);
 
             }
